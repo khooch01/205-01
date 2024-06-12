@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stores</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>List of Stores</h1>
+        <ul id="store-list">
+            <!-- Stores will be dynamically populated here -->
+        </ul>
+        <div class="add-store-form">
+            <h2>Add a Store</h2>
+            <form id="add-store-form">
+                <input type="text" id="store-name" placeholder="Store Name" required>
+                <input type="text" id="phone-number" placeholder="Phone Number" required>
+                <input type="text" id="localities" placeholder="Localities Served (comma-separated)" required>
+                <input type="submit" value="Add Store">
+            </form>
+        </div>
+        <div class="payment-button">
+            <button id="payment-button" onclick="redirectToPayment()">Proceed to Payment</button>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById("add-store-form").addEventListener("submit", function(event) {
+            event.preventDefault();
+            var name = document.getElementById("store-name").value;
+            var phoneNumber = document.getElementById("phone-number").value;
+            var localities = document.getElementById("localities").value.split(",");
+            addStore(name, phoneNumber, localities);
+            this.reset();
+        });
+
+        function addStore(name, phoneNumber, localities) {
+            fetch('/stores', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ name: name, phoneNumber: phoneNumber, localities: localities }),
+            })
+            .then(response => response.json())
+            .then(stores => {
+                updateStoreList(stores);
+            })
+            .catch(error => {
+                alert('Failed to add store');
+                console.error('Error:', error);
+            });
+        }
+
+        function fetchStores() {
+            fetch('/stores')
+                .then(response => response.json())
+                .then(stores => {
+                    updateStoreList(stores);
+                });
+        }
+
+        function updateStoreList(stores) {
+            var storeList = document.getElementById('store-list');
+            storeList.innerHTML = ''; // Clear existing content
+            stores.forEach(store => {
+                var li = document.createElement('li');
+                li.textContent = `Name: ${store.name}, Phone: ${store.phoneNumber}, Localities: ${store.localities.join(', ')}`;
+                storeList.appendChild(li);
+            });
+        }
+
+        function redirectToPayment() {
+            window.location.href = '/payment'; // Assuming the payment endpoint is /payment
+        }
+
+        // Call the fetchStores function when the page loads to initially populate the store list
+        window.onload = fetchStores;
+    </script>
+</body>
+</html>
